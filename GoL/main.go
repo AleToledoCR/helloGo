@@ -3,24 +3,49 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"os"
+	"os/exec"
+	"runtime"
+	"time"
 )
+
+var clear map[string]func()
+
+func init() {
+	clear = make(map[string]func()) //Initialize it
+	clear["linux"] = func() {
+		cmd := exec.Command("clear") //Linux example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
+	clear["windows"] = func() {
+		cmd := exec.Command("cmd", "/c", "cls") //Windows example, its tested
+		cmd.Stdout = os.Stdout
+		cmd.Run()
+	}
+}
+func CallClear() {
+	value, ok := clear[runtime.GOOS] //runtime.GOOS -> linux, windows, darwin etc.
+	if ok {                          //if we defined a clear func for that platform:
+		value() //we execute it
+	} else { //unsupported platform
+		panic("Your platform is unsupported! I can't clear terminal screen :(")
+	}
+}
 
 func main() {
 	/*Punto de entrada de la simulación*/
 	fmt.Println("Iniciando simulación")
-	var universo = inicializarUniverso(20, 20)
-	//fmt.Println(universo)
-	var generaciones = 10
+	var universo = inicializarUniverso(60, 20)
+	var generaciones = 60
 
-	/*universo[0] = []int{0, 0, 0}
-	universo[1] = []int{1, 1, 1}
-	universo[2] = []int{0, 0, 0}*/
 	var poblacion = crearGeneracionExpontanea(universo)
 	imprimirUniverso(poblacion)
 
 	for gen := 0; gen < generaciones; gen++ {
 		poblacion = pasarGeneracion(poblacion)
-		//time.Sleep(1 * time.Second)
+		time.Sleep(300 * time.Millisecond)
+		CallClear()
 		imprimirUniverso(poblacion)
 	}
 }
@@ -38,12 +63,19 @@ func inicializarUniverso(ancho, alto int) [][]int {
 
 /*Imprime en consola un estado del universo específico*/
 func imprimirUniverso(universo [][]int) {
+
 	var ancho = len(universo)
 	var alto = len(universo[0])
-
+	var simbolo = ""
 	for x := 0; x < ancho; x++ {
 		for y := 0; y < alto; y++ {
-			fmt.Print(universo[x][y])
+			if universo[x][y] == 0 {
+				simbolo = " "
+			} else {
+				simbolo = "█"
+			}
+			//fmt.Print(strconv.Itoa(universo[x][y]) + " ")
+			fmt.Print(simbolo)
 		}
 		fmt.Println()
 	}
